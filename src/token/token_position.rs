@@ -1,10 +1,10 @@
 ///Track a tokens position within its environment
 #[derive(Debug, PartialEq)]
 pub struct TokenPosition {
-    line: i32,
-    column_start: i32,
-    column_end: i32,
-    span: i32,
+    pub line: i32,
+    pub column_start: i32,
+    pub column_end: i32,
+    pub span: i32,
 }
 
 impl TokenPosition {

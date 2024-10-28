@@ -2,9 +2,9 @@ use super::{token_literal::TokenLiteral, token_position::TokenPosition, token_ty
 
 #[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
-    token_literal: TokenLiteral,
-    token_position: TokenPosition,
+    pub token_type: TokenType,
+    pub token_literal: TokenLiteral,
+    pub token_position: TokenPosition,
 }
 
 impl Token {
