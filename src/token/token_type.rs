@@ -18,7 +18,7 @@ pub enum TokenType {
 #[cfg(test)]
 mod token_type_tests {
     use crate::token::token_type::TokenType;
-   
+
     #[test]
     fn token_type_comparison() {
         assert_eq!(TokenType::LeftBrace, TokenType::LeftBrace);
