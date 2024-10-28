@@ -1,7 +1,13 @@
+use std::usize;
+
+#[derive(Debug)]
 pub struct Scanner {
     source: String,
     start: usize,
     current: usize,
+    line: i32,
+    column_start: i32,
+    column_end: i32,
 }
 
 impl Scanner {
@@ -10,6 +16,9 @@ impl Scanner {
             source: String::from(source),
             start: 0,
             current: 0,
+            line: 1,
+            column_start: 1,
+            column_end: 1,
         }
     }
 
@@ -27,15 +36,6 @@ impl Scanner {
 #[cfg(test)]
 mod scanner_tests {
     use super::Scanner;
-
-    #[test]
-    fn create_new_scanner() {
-        let scanner = Scanner::new("true");
-
-        assert_eq!("true", scanner.source);
-        assert_eq!(0, scanner.start);
-        assert_eq!(0, scanner.current);
-    }
 
     #[test]
     fn next() {
@@ -78,5 +78,17 @@ mod scanner_tests {
 
         assert_eq!(Some('t'), peek);
         assert_eq!(0, s1.current);
+    }
+
+    #[test]
+    fn create_new_scanner() {
+        let scanner = Scanner::new("true");
+
+        assert_eq!("true", scanner.source);
+        assert_eq!(0, scanner.start);
+        assert_eq!(0, scanner.current);
+        assert_eq!(1, scanner.line);
+        assert_eq!(1, scanner.column_start);
+        assert_eq!(1, scanner.column_end);
     }
 }
