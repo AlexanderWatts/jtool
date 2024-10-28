@@ -1,3 +1,20 @@
+/// Represent JSON literal values
+///
+///JSON literal values e.g. (true, false, null, STRING, NUMBER) need representation in rust as
+///there is no direct mapping between all the types. `TokenLiteral` acts as a bridge between the
+///two allowing these json values to "exist" in rust. All `TokenLiteral` types can be converted
+///into strings for convenience.
+///
+///Note: All numbers are of type `f64`, which still allows non-decimal numbers to be displayed
+///correctly when converted to a string.
+///
+///# Examples
+///
+///```
+///let null: TokenType = TokenType::Null
+///let null: String = TokenType::Null.into();
+///```
+///
 #[derive(Debug)]
 pub enum TokenLiteral {
     String(String),
