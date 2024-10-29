@@ -1,10 +1,7 @@
 use std::usize;
 
 use crate::token::{
-    token::Token,
-    token_literal::TokenLiteral,
-    token_position::TokenPosition,
-    token_type::{self, TokenType},
+    token::Token, token_literal::TokenLiteral, token_position::TokenPosition, token_type::TokenType,
 };
 
 use super::scanner_error::ScannerError;
