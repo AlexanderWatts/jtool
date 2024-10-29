@@ -34,6 +34,6 @@ mod scanner_error {
         let unterminated: Result<&str, ScannerError> = Err(ScannerError::UnterminatedString);
 
         assert_eq!(Err(ScannerError::UnterminatedString), unterminated);
-        assert_eq!("Unknown character", unterminated.unwrap_err().to_string());
+        assert_eq!("Unterminated string", unterminated.unwrap_err().to_string());
     }
 }
