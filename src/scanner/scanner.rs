@@ -67,6 +67,14 @@ mod scanner_tests {
     }
 
     #[test]
+    fn scan_error() {
+        let mut s1 = Scanner::new("@");
+        let res = s1.scan();
+
+        assert_eq!("Unknown character", res.unwrap_err().to_string())
+    }
+
+    #[test]
     fn eval_current_character() {
         let s1 = Scanner::new("{}");
 
