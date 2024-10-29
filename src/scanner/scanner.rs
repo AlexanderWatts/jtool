@@ -42,6 +42,8 @@ impl Scanner {
         match current_char {
             '\n' => {
                 self.line += 1;
+                self.column_start = 1;
+                self.column_end = 1;
                 Ok(None)
             }
             ' ' | '\t' | '\r' => Ok(None),
@@ -83,7 +85,9 @@ mod scanner_tests {
         let mut s1 = Scanner::new("\n");
         let _ = s1.eval('\n');
 
-        assert_eq!(2, s1.line)
+        assert_eq!(2, s1.line);
+        assert_eq!(1, s1.column_start);
+        assert_eq!(1, s1.column_end);
     }
 
     #[test]
