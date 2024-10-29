@@ -73,12 +73,32 @@ impl Scanner {
                 TokenType::Comma,
                 TokenLiteral::String(",".to_string()),
             ))),
+            '"' => self.eval_string(),
             _ => Err(ScannerError::UnknownCharacter),
         };
 
         self.column_start = self.column_end;
 
         res
+    }
+
+    fn eval_string(&mut self) -> Result<Option<Token>, ScannerError> {
+        while matches!(self.peek(), Some(char) if char != '"') {
+            self.next();
+        }
+
+        if self.peek().is_none() {
+            return Err(ScannerError::UnterminatedString);
+        }
+
+        self.next();
+
+        let sub = self.source.get(self.start + 1..self.current - 1).unwrap();
+
+        Ok(Some(self.create_token(
+            TokenType::String,
+            TokenLiteral::String(sub.to_string()),
+        )))
     }
 
     fn create_token(&self, token_type: TokenType, token_literal: TokenLiteral) -> Token {
@@ -104,6 +124,22 @@ impl Scanner {
 #[cfg(test)]
 mod scanner_tests {
     use super::Scanner;
+
+    #[test]
+    fn scan_string() {
+        let mut s1 = Scanner::new("\"Hello, World\"");
+
+        let scan: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+
+        assert_eq!("Hello, World", scan);
+    }
 
     #[test]
     fn update_column_start_and_end() {
