@@ -20,7 +20,7 @@ use super::{token_literal::TokenLiteral, token_position::TokenPosition, token_ty
 ///    TokenPosition::new(1, 1, 4),
 ///);
 ///```
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Token {
     pub token_type: TokenType,
     pub token_literal: TokenLiteral,
