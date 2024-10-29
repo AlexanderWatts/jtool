@@ -1,5 +1,7 @@
 use std::usize;
 
+use super::scanner_error::ScannerError;
+
 #[derive(Debug)]
 pub struct Scanner {
     source: String,
@@ -22,6 +24,15 @@ impl Scanner {
         }
     }
 
+    fn eval(&self, current_char: char) -> Result<Option<()>, ScannerError> {
+        match current_char {
+            ' ' | '\t' | '\r' => Ok(None),
+            _ => {
+                Err(ScannerError::UnknownCharacter)
+            }
+        }
+    }
+
     fn next(&mut self) -> Option<char> {
         let char = self.source.chars().nth(self.current);
         self.current += 1;
@@ -36,6 +47,17 @@ impl Scanner {
 #[cfg(test)]
 mod scanner_tests {
     use super::Scanner;
+
+    #[test]
+    fn eval_current_character() {
+        let s1 = Scanner::new("{}");
+
+        let unknown = s1.eval('@');
+        assert_eq!("Unknown character", unknown.unwrap_err().to_string());
+
+        let space = s1.eval(' ').unwrap();
+        assert_eq!(None, space);
+    }
 
     #[test]
     fn next() {
