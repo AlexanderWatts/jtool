@@ -1,5 +1,7 @@
 use std::usize;
 
+use crate::token::token::Token;
+
 use super::scanner_error::ScannerError;
 
 #[derive(Debug)]
@@ -24,12 +26,22 @@ impl Scanner {
         }
     }
 
-    fn eval(&self, current_char: char) -> Result<Option<()>, ScannerError> {
+    pub fn scan(&mut self) -> Result<Vec<Token>, ScannerError> {
+        let mut tokens: Vec<Token> = vec![];
+
+        while let Some(current_char) = self.next() {
+            if let Some(token) = self.eval(current_char)? {
+                tokens.push(token);
+            };
+        }
+
+        Ok(tokens)
+    }
+
+    fn eval(&self, current_char: char) -> Result<Option<Token>, ScannerError> {
         match current_char {
             ' ' | '\t' | '\r' => Ok(None),
-            _ => {
-                Err(ScannerError::UnknownCharacter)
-            }
+            _ => Err(ScannerError::UnknownCharacter),
         }
     }
 
@@ -47,6 +59,12 @@ impl Scanner {
 #[cfg(test)]
 mod scanner_tests {
     use super::Scanner;
+
+    #[test]
+    fn scan() {
+        let mut s1 = Scanner::new("{}");
+        let _ = s1.scan();
+    }
 
     #[test]
     fn eval_current_character() {
