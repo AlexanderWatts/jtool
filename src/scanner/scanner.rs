@@ -1,6 +1,11 @@
 use std::usize;
 
-use crate::token::token::Token;
+use crate::token::{
+    token::Token,
+    token_literal::TokenLiteral,
+    token_position::TokenPosition,
+    token_type::{self, TokenType},
+};
 
 use super::scanner_error::ScannerError;
 
@@ -39,7 +44,15 @@ impl Scanner {
     }
 
     fn eval(&mut self, current_char: char) -> Result<Option<Token>, ScannerError> {
-        match current_char {
+        let res = match current_char {
+            '{' => Ok(Some(self.create_token(
+                TokenType::LeftBrace,
+                TokenLiteral::String("{".to_string()),
+            ))),
+            '}' => Ok(Some(self.create_token(
+                TokenType::RightBrace,
+                TokenLiteral::String("}".to_string()),
+            ))),
             '\n' => {
                 self.line += 1;
                 self.column_start = 1;
@@ -48,11 +61,24 @@ impl Scanner {
             }
             ' ' | '\t' | '\r' => Ok(None),
             _ => Err(ScannerError::UnknownCharacter),
-        }
+        };
+
+        self.column_start = self.column_end;
+
+        res
+    }
+
+    fn create_token(&self, token_type: TokenType, token_literal: TokenLiteral) -> Token {
+        Token::new(
+            token_type,
+            token_literal,
+            TokenPosition::new(self.line, self.column_start, self.column_end),
+        )
     }
 
     fn next(&mut self) -> Option<char> {
         let char = self.source.chars().nth(self.current);
+        self.column_end += 1;
         self.current += 1;
         char
     }
@@ -67,9 +93,23 @@ mod scanner_tests {
     use super::Scanner;
 
     #[test]
-    fn scan() {
-        let mut s1 = Scanner::new("{}");
-        let _ = s1.scan();
+    fn update_column_start_and_end() {
+        let mut s1 = Scanner::new("{\n}");
+
+        let n = s1.next().unwrap();
+        assert_eq!((1, 2), (s1.column_start, s1.column_end));
+        let _ = s1.eval(n);
+        assert_eq!((2, 2), (s1.column_start, s1.column_end));
+
+        let n = s1.next().unwrap();
+        assert_eq!((2, 3), (s1.column_start, s1.column_end));
+        let _ = s1.eval(n);
+        assert_eq!((1, 1), (s1.column_start, s1.column_end));
+
+        let n = s1.next().unwrap();
+        assert_eq!((1, 2), (s1.column_start, s1.column_end));
+        let _ = s1.eval(n);
+        assert_eq!((2, 2), (s1.column_start, s1.column_end));
     }
 
     #[test]
