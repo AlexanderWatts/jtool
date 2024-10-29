@@ -42,6 +42,13 @@ impl Scanner {
 
     fn eval(&mut self, current_char: char) -> Result<Option<Token>, ScannerError> {
         let res = match current_char {
+            '\n' => {
+                self.line += 1;
+                self.column_start = 1;
+                self.column_end = 1;
+                Ok(None)
+            }
+            ' ' | '\t' | '\r' => Ok(None),
             '{' => Ok(Some(self.create_token(
                 TokenType::LeftBrace,
                 TokenLiteral::String("{".to_string()),
@@ -50,13 +57,22 @@ impl Scanner {
                 TokenType::RightBrace,
                 TokenLiteral::String("}".to_string()),
             ))),
-            '\n' => {
-                self.line += 1;
-                self.column_start = 1;
-                self.column_end = 1;
-                Ok(None)
-            }
-            ' ' | '\t' | '\r' => Ok(None),
+            '[' => Ok(Some(self.create_token(
+                TokenType::LeftBracket,
+                TokenLiteral::String("[".to_string()),
+            ))),
+            ']' => Ok(Some(self.create_token(
+                TokenType::RightBracket,
+                TokenLiteral::String("]".to_string()),
+            ))),
+            ':' => Ok(Some(self.create_token(
+                TokenType::Colon,
+                TokenLiteral::String(":".to_string()),
+            ))),
+            ',' => Ok(Some(self.create_token(
+                TokenType::Comma,
+                TokenLiteral::String(",".to_string()),
+            ))),
             _ => Err(ScannerError::UnknownCharacter),
         };
 
