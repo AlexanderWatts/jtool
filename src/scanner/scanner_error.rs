@@ -21,8 +21,8 @@ mod scanner_error {
 
     #[test]
     fn scanner_error() {
-        let unknown: Result<&str, ScannerError> = Err(ScannerError::UnknownCharacter); 
-       
+        let unknown: Result<&str, ScannerError> = Err(ScannerError::UnknownCharacter);
+
         assert_eq!(Err(ScannerError::UnknownCharacter), unknown);
         assert_eq!("Unknown character", unknown.unwrap_err().to_string());
     }
