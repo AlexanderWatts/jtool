@@ -6,12 +6,12 @@ use super::scanner_error::ScannerError;
 
 #[derive(Debug)]
 pub struct Scanner {
-    source: String,
-    start: usize,
-    current: usize,
-    line: i32,
-    column_start: i32,
-    column_end: i32,
+    pub source: String,
+    pub start: usize,
+    pub current: usize,
+    pub line: i32,
+    pub column_start: i32,
+    pub column_end: i32,
 }
 
 impl Scanner {
@@ -38,8 +38,12 @@ impl Scanner {
         Ok(tokens)
     }
 
-    fn eval(&self, current_char: char) -> Result<Option<Token>, ScannerError> {
+    fn eval(&mut self, current_char: char) -> Result<Option<Token>, ScannerError> {
         match current_char {
+            '\n' => {
+                self.line += 1;
+                Ok(None)
+            }
             ' ' | '\t' | '\r' => Ok(None),
             _ => Err(ScannerError::UnknownCharacter),
         }
@@ -75,8 +79,16 @@ mod scanner_tests {
     }
 
     #[test]
+    fn eval_new_line() {
+        let mut s1 = Scanner::new("\n");
+        let _ = s1.eval('\n');
+
+        assert_eq!(2, s1.line)
+    }
+
+    #[test]
     fn eval_current_character() {
-        let s1 = Scanner::new("{}");
+        let mut s1 = Scanner::new("{}");
 
         let unknown = s1.eval('@');
         assert_eq!("Unknown character", unknown.unwrap_err().to_string());
