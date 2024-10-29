@@ -109,6 +109,10 @@ impl Scanner {
         )
     }
 
+    fn is_numeric(&self, current_char: char) -> bool {
+        current_char >= '0' && current_char <= '9'
+    }
+
     fn next(&mut self) -> Option<char> {
         let char = self.source.chars().nth(self.current);
         self.column_end += 1;
@@ -124,6 +128,16 @@ impl Scanner {
 #[cfg(test)]
 mod scanner_tests {
     use super::Scanner;
+
+    #[test]
+    fn is_char_numeric() {
+        let s1 = Scanner::new("{}");
+        let n1 = s1.is_numeric('9');
+        let n2 = s1.is_numeric('A');
+
+        assert_eq!(true, n1);
+        assert_eq!(false, n2);
+    }
 
     #[test]
     fn scan_string() {
