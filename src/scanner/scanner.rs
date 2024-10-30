@@ -83,7 +83,10 @@ impl Scanner {
                 } else if self.is_alpha(current_char) {
                     self.eval_keyword()
                 } else {
-                    Err(ScannerError::UnknownCharacter)
+                    Err(ScannerError::UnknownCharacter(
+                        TokenPosition::new(self.line, self.column_start, self.column_end),
+                        current_char,
+                    ))
                 }
             }
         };
@@ -136,7 +139,10 @@ impl Scanner {
             "false" => Ok(Some(
                 self.create_token(TokenType::False, TokenLiteral::Bool(false)),
             )),
-            _ => Err(ScannerError::UnknownLiteral),
+            _ => Err(ScannerError::UnknownLiteral(
+                TokenPosition::new(self.line, self.column_start, self.column_end),
+                word.to_string(),
+            )),
         }
     }
 
@@ -146,7 +152,11 @@ impl Scanner {
         }
 
         if self.peek().is_none() {
-            return Err(ScannerError::UnterminatedString);
+            return Err(ScannerError::UnterminatedString(TokenPosition::new(
+                self.line,
+                self.column_start,
+                self.column_end,
+            )));
         }
 
         self.next();
@@ -193,7 +203,7 @@ impl Scanner {
 
 #[cfg(test)]
 mod scanner_tests {
-    use crate::scanner::scanner_error::ScannerError;
+    use crate::{scanner::scanner_error::ScannerError, token::token_position::TokenPosition};
 
     use super::Scanner;
 
@@ -234,7 +244,13 @@ mod scanner_tests {
 
         let mut s1 = Scanner::new("hello");
         let r1 = s1.scan();
-        assert_eq!(Err(ScannerError::UnknownLiteral), r1);
+        assert_eq!(
+            Err(ScannerError::UnknownLiteral(
+                TokenPosition::new(1, 1, 6),
+                "hello".to_string()
+            )),
+            r1
+        );
     }
 
     #[test]
@@ -371,7 +387,10 @@ mod scanner_tests {
         let mut s1 = Scanner::new("@");
         let res = s1.scan();
 
-        assert_eq!("Unknown character", res.unwrap_err().to_string())
+        assert_eq!(
+            "Error at [line:1, between:1-2] Unknown character [@]",
+            res.unwrap_err().to_string()
+        )
     }
 
     #[test]
@@ -382,17 +401,6 @@ mod scanner_tests {
         assert_eq!(2, s1.line);
         assert_eq!(1, s1.column_start);
         assert_eq!(1, s1.column_end);
-    }
-
-    #[test]
-    fn eval_current_character() {
-        let mut s1 = Scanner::new("{}");
-
-        let unknown = s1.eval('@');
-        assert_eq!("Unknown character", unknown.unwrap_err().to_string());
-
-        let space = s1.eval(' ').unwrap();
-        assert_eq!(None, space);
     }
 
     #[test]
