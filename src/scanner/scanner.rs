@@ -74,12 +74,47 @@ impl Scanner {
                 TokenLiteral::String(",".to_string()),
             ))),
             '"' => self.eval_string(),
-            _ => Err(ScannerError::UnknownCharacter),
+            '-' => self.eval_numeric(),
+            _ => {
+                if self.is_numeric(current_char) {
+                    self.eval_numeric()
+                } else {
+                    Err(ScannerError::UnknownCharacter)
+                }
+            }
         };
 
         self.column_start = self.column_end;
 
         res
+    }
+
+    fn eval_numeric(&mut self) -> Result<Option<Token>, ScannerError> {
+        while matches!(self.peek(), Some(char) if self.is_numeric(char)) {
+            self.next();
+        }
+
+        if matches!(self.peek(), Some(char) if char == '.')
+            && matches!(self.peek_next(), Some(char) if self.is_numeric(char))
+        {
+            self.next();
+
+            while matches!(self.peek(), Some(char) if self.is_numeric(char)) {
+                self.next();
+            }
+        }
+
+        let number = self
+            .source
+            .get(self.start..self.current)
+            .unwrap()
+            .parse::<f64>()
+            .unwrap();
+
+        Ok(Some(self.create_token(
+            TokenType::Number,
+            TokenLiteral::Number(number),
+        )))
     }
 
     fn eval_string(&mut self) -> Result<Option<Token>, ScannerError> {
@@ -113,6 +148,10 @@ impl Scanner {
         current_char >= '0' && current_char <= '9'
     }
 
+    fn peek_next(&mut self) -> Option<char> {
+        self.source.chars().nth(self.current + 1)
+    }
+
     fn next(&mut self) -> Option<char> {
         let char = self.source.chars().nth(self.current);
         self.column_end += 1;
@@ -128,6 +167,55 @@ impl Scanner {
 #[cfg(test)]
 mod scanner_tests {
     use super::Scanner;
+
+    #[test]
+    fn scan_number() {
+        let mut s1 = Scanner::new("100");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!(100.0, r1.parse::<f64>().unwrap());
+
+        let mut s1 = Scanner::new("2.52");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!(2.52, r1.parse::<f64>().unwrap());
+
+        let mut s1 = Scanner::new("-35.5");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!(-35.5, r1.parse::<f64>().unwrap());
+    }
+
+    #[test]
+    fn peek_next() {
+        let mut s1 = Scanner::new("101");
+
+        assert_eq!(Some('0'), s1.peek_next());
+        s1.next();
+        assert_eq!(Some('1'), s1.peek_next());
+        s1.next();
+        assert_eq!(None, s1.peek_next());
+
+        assert_eq!(2, s1.current);
+    }
 
     #[test]
     fn is_char_numeric() {
