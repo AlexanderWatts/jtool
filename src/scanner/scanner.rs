@@ -12,7 +12,7 @@ use super::scanner_error::ScannerError;
 ///
 ///```
 ///let mut scanner = Scanner::new("[ true, false ]");
-///let res = scanner.scan();
+///let res: Result<Option<Token>, ScannerError> = scanner.scan();
 ///println!("{:#?}", res);
 ///
 /// // Output:
