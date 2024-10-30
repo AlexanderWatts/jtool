@@ -80,6 +80,8 @@ impl Scanner {
             _ => {
                 if self.is_numeric(current_char) {
                     self.eval_numeric()
+                } else if self.is_alpha(current_char) {
+                    self.eval_keyword()
                 } else {
                     Err(ScannerError::UnknownCharacter)
                 }
@@ -117,6 +119,25 @@ impl Scanner {
             TokenType::Number,
             TokenLiteral::Number(number),
         )))
+    }
+
+    fn eval_keyword(&mut self) -> Result<Option<Token>, ScannerError> {
+        while matches!(self.peek(), Some(char) if self.is_alpha(char)) {
+            self.next();
+        }
+
+        let word = self.source.get(self.start..self.current).unwrap();
+
+        match word {
+            "null" => Ok(Some(self.create_token(TokenType::Null, TokenLiteral::Null))),
+            "true" => Ok(Some(
+                self.create_token(TokenType::True, TokenLiteral::Bool(true)),
+            )),
+            "false" => Ok(Some(
+                self.create_token(TokenType::False, TokenLiteral::Bool(false)),
+            )),
+            _ => Err(ScannerError::UnknownLiteral),
+        }
     }
 
     fn eval_string(&mut self) -> Result<Option<Token>, ScannerError> {
@@ -172,7 +193,49 @@ impl Scanner {
 
 #[cfg(test)]
 mod scanner_tests {
+    use crate::scanner::scanner_error::ScannerError;
+
     use super::Scanner;
+
+    #[test]
+    fn scan_keywords() {
+        let mut s1 = Scanner::new("true");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!("true", r1);
+
+        let mut s1 = Scanner::new("false");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!("false", r1);
+
+        let mut s1 = Scanner::new("null");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!("null", r1);
+
+        let mut s1 = Scanner::new("hello");
+        let r1 = s1.scan();
+        assert_eq!(Err(ScannerError::UnknownLiteral), r1);
+    }
 
     #[test]
     fn scan_number() {
