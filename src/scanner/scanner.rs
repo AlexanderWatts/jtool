@@ -6,6 +6,81 @@ use crate::token::{
 
 use super::scanner_error::ScannerError;
 
+///Iterate over a string and group characters into tokens
+///
+///# Examples
+///
+///```
+///let mut scanner = Scanner::new("[ true, false ]");
+///let res = scanner.scan();
+///
+/// // Output:
+///Ok(
+///    [
+///        Token {
+///            token_type: LeftBracket,
+///            token_literal: String(
+///                "[",
+///            ),
+///            token_position: TokenPosition {
+///                line: 1,
+///                column_start: 1,
+///                column_end: 2,
+///                span: 1,
+///            },
+///        },
+///        Token {
+///            token_type: True,
+///            token_literal: Bool(
+///                true,
+///            ),
+///            token_position: TokenPosition {
+///                line: 1,
+///                column_start: 3,
+///                column_end: 7,
+///                span: 4,
+///            },
+///        },
+///        Token {
+///            token_type: Comma,
+///            token_literal: String(
+///                ",",
+///            ),
+///            token_position: TokenPosition {
+///                line: 1,
+///                column_start: 7,
+///                column_end: 8,
+///                span: 1,
+///            },
+///        },
+///        Token {
+///            token_type: False,
+///            token_literal: Bool(
+///                false,
+///            ),
+///            token_position: TokenPosition {
+///                line: 1,
+///                column_start: 9,
+///                column_end: 14,
+///                span: 5,
+///            },
+///        },
+///        Token {
+///            token_type: RightBracket,
+///            token_literal: String(
+///                "]",
+///            ),
+///            token_position: TokenPosition {
+///                line: 1,
+///                column_start: 15,
+///                column_end: 16,
+///                span: 1,
+///            },
+///        },
+///    ],
+///)
+///
+///```
 #[derive(Debug)]
 pub struct Scanner {
     pub source: String,
@@ -31,8 +106,10 @@ impl Scanner {
     pub fn scan(&mut self) -> Result<Vec<Token>, ScannerError> {
         let mut tokens: Vec<Token> = vec![];
 
-        while let Some(current_char) = self.next() {
-            if let Some(token) = self.eval(current_char)? {
+        while self.peek().is_some() {
+            self.start = self.current;
+
+            if let Some(token) = self.eval()? {
                 tokens.push(token);
             };
         }
@@ -40,7 +117,9 @@ impl Scanner {
         Ok(tokens)
     }
 
-    fn eval(&mut self, current_char: char) -> Result<Option<Token>, ScannerError> {
+    fn eval(&mut self) -> Result<Option<Token>, ScannerError> {
+        let current_char = self.next().unwrap();
+
         let res = match current_char {
             '\n' => {
                 self.line += 1;
@@ -101,13 +180,13 @@ impl Scanner {
             self.next();
         }
 
-        if matches!(self.peek(), Some(char) if char == '.')
-            && matches!(self.peek_next(), Some(char) if self.is_numeric(char))
-        {
+        if matches!(self.peek(), Some(char) if char == '.') {
             self.next();
 
-            while matches!(self.peek(), Some(char) if self.is_numeric(char)) {
-                self.next();
+            if matches!(self.peek(), Some(char) if self.is_numeric(char)) {
+                while matches!(self.peek(), Some(char) if self.is_numeric(char)) {
+                    self.next();
+                }
             }
         }
 
@@ -365,21 +444,16 @@ mod scanner_tests {
     #[test]
     fn update_column_start_and_end() {
         let mut s1 = Scanner::new("{\n}");
+        let res = s1.scan().unwrap();
 
-        let n = s1.next().unwrap();
-        assert_eq!((1, 2), (s1.column_start, s1.column_end));
-        let _ = s1.eval(n);
-        assert_eq!((2, 2), (s1.column_start, s1.column_end));
-
-        let n = s1.next().unwrap();
-        assert_eq!((2, 3), (s1.column_start, s1.column_end));
-        let _ = s1.eval(n);
-        assert_eq!((1, 1), (s1.column_start, s1.column_end));
-
-        let n = s1.next().unwrap();
-        assert_eq!((1, 2), (s1.column_start, s1.column_end));
-        let _ = s1.eval(n);
-        assert_eq!((2, 2), (s1.column_start, s1.column_end));
+        assert_eq!(
+            TokenPosition::new(1, 1, 2),
+            res.get(0).unwrap().token_position
+        );
+        assert_eq!(
+            TokenPosition::new(2, 1, 2),
+            res.get(1).unwrap().token_position
+        );
     }
 
     #[test]
@@ -396,7 +470,7 @@ mod scanner_tests {
     #[test]
     fn eval_new_line() {
         let mut s1 = Scanner::new("\n");
-        let _ = s1.eval('\n');
+        let _ = s1.eval();
 
         assert_eq!(2, s1.line);
         assert_eq!(1, s1.column_start);
