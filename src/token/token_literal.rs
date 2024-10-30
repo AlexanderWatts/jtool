@@ -15,7 +15,7 @@
 ///let null: String = TokenType::Null.into();
 ///```
 ///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenLiteral {
     String(String),
     Number(f64),
