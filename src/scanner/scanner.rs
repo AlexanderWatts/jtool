@@ -13,6 +13,7 @@ use super::scanner_error::ScannerError;
 ///```
 ///let mut scanner = Scanner::new("[ true, false ]");
 ///let res = scanner.scan();
+///println!("{:#?}", res);
 ///
 /// // Output:
 ///Ok(
