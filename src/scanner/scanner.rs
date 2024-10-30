@@ -75,6 +75,8 @@ impl Scanner {
             ))),
             '"' => self.eval_string(),
             '-' => self.eval_numeric(),
+            '+' => self.eval_numeric(),
+            '.' => self.eval_numeric(),
             _ => {
                 if self.is_numeric(current_char) {
                     self.eval_numeric()
@@ -170,6 +172,28 @@ mod scanner_tests {
 
     #[test]
     fn scan_number() {
+        let mut s1 = Scanner::new(".23");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!(0.23, r1.parse::<f64>().unwrap());
+
+        let mut s1 = Scanner::new("-2.");
+        let r1: String = s1
+            .scan()
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .token_literal
+            .clone()
+            .into();
+        assert_eq!(-2.0, r1.parse::<f64>().unwrap());
+
         let mut s1 = Scanner::new("100");
         let r1: String = s1
             .scan()
