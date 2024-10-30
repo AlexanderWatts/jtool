@@ -146,6 +146,10 @@ impl Scanner {
         )
     }
 
+    fn is_alpha(&self, current_char: char) -> bool {
+        (current_char >= 'a' && current_char <= 'z') || (current_char >= 'A' && current_char <= 'Z')
+    }
+
     fn is_numeric(&self, current_char: char) -> bool {
         current_char >= '0' && current_char <= '9'
     }
@@ -239,6 +243,18 @@ mod scanner_tests {
         assert_eq!(None, s1.peek_next());
 
         assert_eq!(2, s1.current);
+    }
+
+    #[test]
+    fn is_char_alpha() {
+        let s1 = Scanner::new("{}");
+        let a1 = s1.is_alpha('9');
+        let a2 = s1.is_alpha('a');
+        let a3 = s1.is_alpha('R');
+
+        assert_eq!(false, a1);
+        assert_eq!(true, a2);
+        assert_eq!(true, a3);
     }
 
     #[test]
