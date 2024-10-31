@@ -11,6 +11,12 @@ impl<'a> Parser {
         Self { current: 0, tokens }
     }
 
+    fn next(&mut self) -> Option<&Token> {
+        let next = self.tokens.get(self.current);
+        self.current += 1;
+        next
+    }
+
     fn peek(&self) -> Option<&Token> {
         self.tokens.get(self.current)
     }
@@ -27,6 +33,26 @@ mod parser_tests {
 
     #[test]
     fn get_current_token() {
+        let mut parser = Parser::new(vec![Token::new(
+            TokenType::True,
+            TokenLiteral::Bool(true),
+            TokenPosition::new(1, 1, 2),
+        )]);
+        let token = parser.next().unwrap();
+
+        assert_eq!(
+            Token::new(
+                TokenType::True,
+                TokenLiteral::Bool(true),
+                TokenPosition::new(1, 1, 2),
+            ),
+            *token
+        );
+        assert_eq!(1, parser.current);
+    }
+
+    #[test]
+    fn look_at_current_token() {
         let parser = Parser::new(vec![Token::new(
             TokenType::True,
             TokenLiteral::Bool(true),
