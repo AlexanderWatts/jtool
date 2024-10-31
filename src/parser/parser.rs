@@ -16,6 +16,10 @@ impl<'a> Parser {
         Self { current: 0, tokens }
     }
 
+    pub fn parse(&'a mut self) -> Result<AstNode<'a>, ParserError> {
+        self.parse_value()
+    }
+
     fn parse_value(&'a mut self) -> Result<AstNode<'a>, ParserError> {
         self.next()
             .ok_or(ParserError::UnknownValue)
