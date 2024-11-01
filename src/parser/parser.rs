@@ -1,3 +1,5 @@
+use std::cell::Cell;
+
 use crate::{
     ast_nodes::ast_nodes::AstNode,
     token::{token::Token, token_type::TokenType},
@@ -7,22 +9,39 @@ use super::parser_error::ParserError;
 
 #[derive(Debug)]
 pub struct Parser {
-    current: usize,
+    current: Cell<usize>,
     tokens: Vec<Token>,
 }
 
 impl<'a> Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { current: 0, tokens }
+        Self {
+            current: Cell::new(0),
+            tokens,
+        }
     }
 
     pub fn parse(&'a mut self) -> Result<AstNode<'a>, ParserError> {
+        if let Some(_) = self.peek() {
+            return self.parse_list();
+        }
+
         self.parse_value()
+    }
+
+    fn parse_list(&'a self) -> Result<AstNode<'a>, ParserError> {
+        let left_brace = self.next_or_error(TokenType::LeftBracket, "Expected [")?;
+
+        let members = vec![];
+
+        let right_brace = self.next_or_error(TokenType::RightBracket, "Expected ]")?;
+
+        Ok(AstNode::Array(left_brace, members, right_brace))
     }
 
     fn parse_value(&'a mut self) -> Result<AstNode<'a>, ParserError> {
         self.next()
-            .ok_or(ParserError::UnknownValue)
+            .ok_or(ParserError::UnexpectedToken("".to_string()))
             .and_then(|token| match token.token_type {
                 TokenType::String
                 | TokenType::Number
@@ -31,18 +50,31 @@ impl<'a> Parser {
                 | TokenType::Null => {
                     return Ok(AstNode::Value(&token.token_literal));
                 }
-                _ => Err(ParserError::UnknownValue),
+                _ => Err(ParserError::UnexpectedToken("".to_string())),
             })
     }
 
-    fn next(&mut self) -> Option<&Token> {
-        let next = self.tokens.get(self.current);
-        self.current += 1;
+    fn next_or_error(
+        &self,
+        token_type: TokenType,
+        error_message: &str,
+    ) -> Result<&Token, ParserError> {
+        if let Some(token) = self.peek() {
+            if token.token_type == token_type {
+                return Ok(self.next().unwrap());
+            }
+        }
+        Err(ParserError::UnexpectedToken(error_message.to_string()))
+    }
+
+    fn next(&self) -> Option<&Token> {
+        let next = self.tokens.get(self.current.take());
+        self.current.set(self.current.get() + 1);
         next
     }
 
     fn peek(&self) -> Option<&Token> {
-        self.tokens.get(self.current)
+        self.tokens.get(self.current.get())
     }
 }
 
@@ -51,6 +83,7 @@ mod parser_tests {
     use crate::{
         ast_nodes::ast_nodes::AstNode,
         parser::parser_error::ParserError,
+        scanner::scanner::Scanner,
         token::{
             token::Token, token_literal::TokenLiteral, token_position::TokenPosition,
             token_type::TokenType,
@@ -58,6 +91,15 @@ mod parser_tests {
     };
 
     use super::Parser;
+
+    #[test]
+    fn get_list() {
+        let mut scanner = Scanner::new("[true]");
+        let tokens = scanner.scan().unwrap();
+        let parser = Parser::new(tokens);
+
+        let _ = parser.parse_list();
+    }
 
     #[test]
     fn get_value() {
@@ -86,12 +128,15 @@ mod parser_tests {
             TokenLiteral::String(":".to_string()),
             TokenPosition::new(1, 1, 2),
         )]);
-        assert_eq!(Err(ParserError::UnknownValue), parser.parse_value(),);
+        assert_eq!(
+            Err(ParserError::UnexpectedToken("".to_string())),
+            parser.parse_value()
+        );
     }
 
     #[test]
     fn get_current_token() {
-        let mut parser = Parser::new(vec![Token::new(
+        let parser = Parser::new(vec![Token::new(
             TokenType::True,
             TokenLiteral::Bool(true),
             TokenPosition::new(1, 1, 2),
@@ -106,7 +151,7 @@ mod parser_tests {
             ),
             *token
         );
-        assert_eq!(1, parser.current);
+        assert_eq!(1, parser.current.get());
     }
 
     #[test]
