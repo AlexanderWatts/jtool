@@ -1,3 +1,5 @@
+mod ast_nodes;
+mod parser;
 mod scanner;
 mod token;
 

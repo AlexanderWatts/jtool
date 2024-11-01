@@ -115,6 +115,7 @@ impl Scanner {
             };
         }
 
+        tokens.push(self.create_token(TokenType::Eof, TokenLiteral::String("".to_string())));
         Ok(tokens)
     }
 
